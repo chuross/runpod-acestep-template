@@ -35,7 +35,7 @@ def init_model():
     # Default to Full model for high quality as per request
     status, ok = dit_handler.initialize_service(
         project_root=project_root,
-        config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-full"), 
+        config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-base"), 
         device=device
     )
     if not ok:
@@ -44,7 +44,7 @@ def init_model():
 
     llm_handler.initialize(
         checkpoint_dir=checkpoint_dir,
-        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-0.6B"),
+        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-4B"),
         backend="vllm",
         device=device
     )
@@ -81,7 +81,7 @@ def handler(job):
     # LM parameters
     lm_temperature = job_input.get("lm_temperature", 0.85)
     lm_cfg_scale = job_input.get("lm_cfg_scale", 2.0)
-    audio_format = job_input.get("audio_format", "flac")
+    audio_format = job_input.get("audio_format", "mp3")
     
     # Validation
     if duration > 600: duration = 600
