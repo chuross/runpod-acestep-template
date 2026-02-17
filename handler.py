@@ -33,18 +33,23 @@ def init_model():
     # but based on docs we need to specify them.
     # We will use sensible defaults for the template, user might need to change them.
     # Default to Full model for high quality as per request
-    dit_handler.initialize_service(
+    status, ok = dit_handler.initialize_service(
         project_root=project_root,
         config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-full"), 
         device=device
     )
+    if not ok:
+        raise RuntimeError(f"Failed to initialize DiT model: {status}")
+    print(f"DiT model initialized: {status}")
 
     llm_handler.initialize(
         checkpoint_dir=checkpoint_dir,
-        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-0.6B"), # or 1.7B
-        backend="vllm", # Assumes vllm is installed and available
+        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-0.6B"),
+        backend="vllm",
         device=device
     )
+    if not llm_handler.llm_initialized:
+        raise RuntimeError("Failed to initialize LLM handler")
     
     print("Models loaded successfully.")
 
@@ -55,7 +60,7 @@ def handler(job):
     # Extract parameters for GenerationParams
     prompt = job_input.get("prompt", "")
     lyrics = job_input.get("lyrics", "")
-    duration = job_input.get("duration", 30)
+    duration = job_input.get("duration", -1)
     
     # Other potential params mapped from input
     bpm = job_input.get("bpm")
@@ -64,6 +69,19 @@ def handler(job):
     
     # Config parameters
     batch_size = job_input.get("batch_size", 1)
+    
+    # High quality generation parameters (overridable from request)
+    inference_steps = job_input.get("inference_steps", 64)
+    guidance_scale = job_input.get("guidance_scale", 8.0)
+    use_adg = job_input.get("use_adg", True)
+    shift = job_input.get("shift", 3.0)
+    seed = job_input.get("seed", -1)
+    thinking = job_input.get("thinking", True)
+    
+    # LM parameters
+    lm_temperature = job_input.get("lm_temperature", 0.85)
+    lm_cfg_scale = job_input.get("lm_cfg_scale", 2.0)
+    audio_format = job_input.get("audio_format", "flac")
     
     # Validation
     if duration > 600: duration = 600
@@ -79,20 +97,23 @@ def handler(job):
             bpm=bpm,
             keyscale=key,
             vocal_language=vocal_language,
-            thinking=True, # Enable thinking process by default
+            thinking=thinking,
             # High Quality Settings (Base Model)
-            inference_steps=64,     # High quality
-            guidance_scale=8.0,
-            use_adg=True,           # Adaptive Dual Guidance
+            inference_steps=inference_steps,
+            guidance_scale=guidance_scale,
+            use_adg=use_adg,
             cfg_interval_start=0.0,
             cfg_interval_end=1.0,
-            shift=3.0,              # Timestep shift
-            seed=-1,                # Random seed by default unless specified
+            shift=shift,
+            seed=seed,
+            # LM parameters
+            lm_temperature=lm_temperature,
+            lm_cfg_scale=lm_cfg_scale,
         )
         
         config = GenerationConfig(
             batch_size=batch_size,
-            audio_format="mp3" # Request mp3 directly if supported, else convert
+            audio_format=audio_format,
         )
         
         # Output directory
@@ -121,7 +142,7 @@ def handler(job):
                         
                     output_data.append({
                         "audio_base64": audio_base64,
-                        "format": "mp3", # actual format depends on file extension
+                        "format": audio_format,
                         "metadata": {
                             "key": audio.get('key'),
                             "bpm": audio.get('bpm'),
