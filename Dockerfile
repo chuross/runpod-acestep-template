@@ -1,5 +1,5 @@
 # Base image: PyTorch with CUDA support
-FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+FROM runpod/pytorch:1.0.3-cu1300-torch260-ubuntu2404
 
 # Environment variables
 ENV DEBIAN_FRONTEND=noninteractive

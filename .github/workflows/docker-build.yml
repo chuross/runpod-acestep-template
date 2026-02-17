@@ -2,8 +2,8 @@ name: Docker Build and Push
 
 on:
   push:
-    tags:
-      - '**'
+    branches:
+      - main
 
   workflow_dispatch:
 
@@ -32,8 +32,7 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=tag,enable=true,pattern=1.5-{{tag}}
-            type=sha,format=long,prefix=1.5-
+            type=sha
 
 
       - name: Build and push Docker image
