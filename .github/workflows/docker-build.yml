@@ -2,10 +2,9 @@ name: Docker Build and Push
 
 on:
   push:
-    branches:
-      - main
     tags:
-      - 'v*'
+      - '**'
+
   workflow_dispatch:
 
 env:
@@ -36,9 +35,9 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=1.5-latest,enable={{is_default_branch}}
             type=ref,event=tag,enable=true,pattern=1.5-{{tag}}
             type=sha,format=long,prefix=1.5-
+
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
