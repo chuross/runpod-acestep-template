@@ -32,7 +32,7 @@ RUN uv sync --no-dev
 RUN uv add runpod
 
 # 2. SFT DiT model
-RUN uv run acestep-download --model acestep-v15-sft
+RUN uv run acestep-download --model acestep-v15-turbo
 
 # 3. 4B LM for best quality (requires ≥24GB VRAM)
 RUN uv run acestep-download --model acestep-5Hz-lm-4B

@@ -66,7 +66,7 @@ def init_model():
     print("Initializing DiT model...")
     status, ok = dit_handler.initialize_service(
         project_root=project_root,
-        config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-sft"), 
+        config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-turbo"), 
         device=device
     )
     if not ok:
