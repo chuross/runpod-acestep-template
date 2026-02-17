@@ -8,6 +8,20 @@ This repository contains a template for deploying AceStep 1.5 (an open-source mu
 - Docker installed locally (or use RunPod's image builder)
 - Container registry (Docker Hub, GitHub Container Registry, etc.)
 
+## GitHub Actions
+
+This repository includes a GitHub Actions workflow to automatically build and push the Docker image to Docker Hub.
+
+### Secrets Configuration
+
+To use the workflow, you need to set the following secrets in your GitHub repository settings:
+
+- `DOCKERHUB_USERNAME`: Your Docker Hub username.
+- `DOCKERHUB_TOKEN`: Your Docker Hub access token.
+
+The workflow is triggered on pushes to the `main` branch (tagged as `1.5-latest`) and on git tag creation (e.g., `v1.0.0` tagged as `1.5-v1.0.0`).
+
+
 ## Deployment Steps
 
 ### 1. Build the Docker Image
