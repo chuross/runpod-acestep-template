@@ -44,7 +44,7 @@ def init_model():
 
     llm_handler.initialize(
         checkpoint_dir=checkpoint_dir,
-        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-4B"),
+        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-1.7B"),
         backend="vllm",
         device=device
     )
