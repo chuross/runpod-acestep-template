@@ -93,12 +93,17 @@ def handler(job):
     batch_size = job_input.get("batch_size", 1)
     
     # High quality generation parameters (overridable from request)
-    inference_steps = job_input.get("inference_steps", 64)
-    guidance_scale = job_input.get("guidance_scale", 8.0)
+    # High quality generation parameters (overridable from request)
+    # Default values optimized for ACE-Step-1.5-Turbo
+    inference_steps = job_input.get("inference_steps", 8)  # Turbo: 8 steps is standard
+    guidance_scale = job_input.get("guidance_scale", 0.0)  # Turbo: 0.0 (distilled) or low CFG
     use_adg = job_input.get("use_adg", True)
-    shift = job_input.get("shift", 3.0)
+    shift = job_input.get("shift", 3.0)  # Turbo: 3.0 recommended
     seed = job_input.get("seed", -1)
     thinking = job_input.get("thinking", True)
+    
+    # Advanced DiT parameters
+    infer_method = job_input.get("infer_method", "ode") # "ode" (Euler) or "sde"
     
     # LM parameters
     lm_temperature = job_input.get("lm_temperature", 0.85)
@@ -108,9 +113,11 @@ def handler(job):
     # Validation
     if duration > 600: duration = 600
     
+    # Check for instrumental request
+    instrumental = "[Instrumental]" in lyrics if lyrics else False
+    
     try:
         # Configure generation parameters
-        # Hardcoded High Quality Parameters as requested
         params = GenerationParams(
             task_type="text2music",
             caption=prompt,
@@ -119,6 +126,7 @@ def handler(job):
             bpm=bpm,
             keyscale=key,
             vocal_language=vocal_language,
+            instrumental=instrumental, # instrumental flag based on lyrics content
             thinking=thinking,
             # High Quality Settings (Base Model)
             inference_steps=inference_steps,
@@ -127,6 +135,7 @@ def handler(job):
             cfg_interval_start=0.0,
             cfg_interval_end=1.0,
             shift=shift,
+            infer_method=infer_method,
             seed=seed,
             # LM parameters
             lm_temperature=lm_temperature,
