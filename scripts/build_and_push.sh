@@ -11,7 +11,7 @@ SUFFIX=$1
 IMAGE_NAME="chuross/acestep-runpod:1.5-$SUFFIX"
 
 echo "Building Docker image: $IMAGE_NAME..."
-docker build -t "$IMAGE_NAME" .
+docker build --platform linux/amd64 -t "$IMAGE_NAME" .
 
 if [ $? -ne 0 ]; then
   echo "Docker build failed."
