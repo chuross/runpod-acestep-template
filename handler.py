@@ -23,33 +23,55 @@ def init_model():
     llm_handler = LLMHandler()
 
     # Paths configuration
-    # Assuming the code is running from the repo root /workspace
     project_root = "/workspace"
     checkpoint_dir = os.environ.get("ACESTEP_CHECKPOINT_DIR", "/workspace/checkpoints")
 
-    # Initialize services
-    # config_path and lm_model_path might need to be adjusted based on the actual downloaded models
-    # Assuming defaults or environment variables will be used by the library if not fully specified, 
-    # but based on docs we need to specify them.
-    # We will use sensible defaults for the template, user might need to change them.
-    # Default to Full model for high quality as per request
-    status, ok = dit_handler.initialize_service(
-        project_root=project_root,
-        config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-base"), 
-        device=device
-    )
-    if not ok:
-        raise RuntimeError(f"Failed to initialize DiT model: {status}")
-    print(f"DiT model initialized: {status}")
+    # ============================================================
+    # OOM対策: vLLMのgpu_memory_utilizationを制限する
+    # vLLMはデフォルトでVRAMの最大90%を確保しようとするため、
+    # DiTモデルが載る余地がなくなりOOMになる。
+    # max_ratioを0.5に制限して、DiTと共存できるようにする。
+    # ============================================================
+    LM_MAX_GPU_RATIO = float(os.environ.get("ACESTEP_LM_GPU_RATIO", "0.5"))
+    _original_get_gpu_memory_utilization = llm_handler.get_gpu_memory_utilization
 
+    def _patched_get_gpu_memory_utilization(model_path=None, minimal_gpu=3, min_ratio=0.1, max_ratio=0.9):
+        ratio, low_gpu = _original_get_gpu_memory_utilization(
+            model_path=model_path,
+            minimal_gpu=minimal_gpu,
+            min_ratio=min_ratio,
+            max_ratio=LM_MAX_GPU_RATIO,  # max_ratioを制限
+        )
+        # 念のためratioも上限でクランプ
+        ratio = min(ratio, LM_MAX_GPU_RATIO)
+        print(f"[OOM対策] vLLM gpu_memory_utilization: {ratio:.3f} (max_ratio: {LM_MAX_GPU_RATIO})")
+        return ratio, low_gpu
+
+    llm_handler.get_gpu_memory_utilization = _patched_get_gpu_memory_utilization
+
+    # ============================================================
+    # 初期化順序: LLM → DiT (vLLMに先にメモリを確保させる)
+    # ============================================================
+    print("Initializing LLM handler (vLLM)...")
     llm_handler.initialize(
         checkpoint_dir=checkpoint_dir,
-        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-1.7B"),
+        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-4B"),
         backend="vllm",
         device=device
     )
     if not llm_handler.llm_initialized:
         raise RuntimeError("Failed to initialize LLM handler")
+    print("LLM handler initialized.")
+
+    print("Initializing DiT model...")
+    status, ok = dit_handler.initialize_service(
+        project_root=project_root,
+        config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-sft"), 
+        device=device
+    )
+    if not ok:
+        raise RuntimeError(f"Failed to initialize DiT model: {status}")
+    print(f"DiT model initialized: {status}")
     
     print("Models loaded successfully.")
 
