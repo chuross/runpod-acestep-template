@@ -33,13 +33,13 @@ RUN uv add runpod
 
 # Pre-download models to speed up cold starts
 # 1. Main model (includes: vae, Qwen3-Embedding-0.6B, acestep-v15-turbo, acestep-5Hz-lm-1.7B)
-RUN uv run acestep-download --download-source huggingface
+RUN uv run acestep-download
 
 # 2. Base DiT model for high-quality generation (non-turbo, supports CFG/ADG)
-RUN uv run acestep-download --model acestep-v15-base --download-source huggingface
+RUN uv run acestep-download --model acestep-v15-base
 
 # 3. Large LM for best quality (requires ≥24GB VRAM)
-RUN uv run acestep-download --model acestep-5Hz-lm-4B --download-source huggingface
+RUN uv run acestep-download --model acestep-5Hz-lm-4B
 
 # Copy handler code
 COPY handler.py /workspace/handler.py
