@@ -1,5 +1,5 @@
 # Base image: PyTorch with CUDA support
-FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+FROM --platform=linux/amd64 pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
 
 # Environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install uv (fast package manager)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:$PATH"
+ENV PATH="/root/.local/bin:$PATH"
 
 # Install RunPod SDK
 RUN pip install runpod
