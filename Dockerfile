@@ -1,5 +1,5 @@
 # Base image: PyTorch with CUDA support
-FROM --platform=linux/amd64 pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
 
 # Environment variables
 ENV DEBIAN_FRONTEND=noninteractive
