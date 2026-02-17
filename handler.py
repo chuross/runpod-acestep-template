@@ -32,15 +32,16 @@ def init_model():
     # Assuming defaults or environment variables will be used by the library if not fully specified, 
     # but based on docs we need to specify them.
     # We will use sensible defaults for the template, user might need to change them.
+    # Default to Full model for high quality as per request
     dit_handler.initialize_service(
         project_root=project_root,
-        config_path="acestep-v15-turbo", # or acestep-v15-full depending on what user wants/downloads
+        config_path=os.environ.get("ACESTEP_MODEL_CONFIG", "acestep-v15-full"), 
         device=device
     )
 
     llm_handler.initialize(
         checkpoint_dir=checkpoint_dir,
-        lm_model_path="acestep-5Hz-lm-0.6B", # or 1.7B
+        lm_model_path=os.environ.get("ACESTEP_LM_MODEL", "acestep-5Hz-lm-0.6B"), # or 1.7B
         backend="vllm", # Assumes vllm is installed and available
         device=device
     )
@@ -69,6 +70,7 @@ def handler(job):
     
     try:
         # Configure generation parameters
+        # Hardcoded High Quality Parameters as requested
         params = GenerationParams(
             task_type="text2music",
             caption=prompt,
@@ -77,7 +79,15 @@ def handler(job):
             bpm=bpm,
             keyscale=key,
             vocal_language=vocal_language,
-            thinking=True # Enable thinking process by default
+            thinking=True, # Enable thinking process by default
+            # High Quality Settings (Base Model)
+            inference_steps=64,     # High quality
+            guidance_scale=8.0,
+            use_adg=True,           # Adaptive Dual Guidance
+            cfg_interval_start=0.0,
+            cfg_interval_end=1.0,
+            shift=3.0,              # Timestep shift
+            seed=-1,                # Random seed by default unless specified
         )
         
         config = GenerationConfig(
