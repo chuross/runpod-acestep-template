@@ -132,5 +132,13 @@ def handler(job):
         return {"error": str(e)}
 
 if __name__ == "__main__":
-    init_model()
+    try:
+        init_model()
+    except Exception as e:
+        print(f"FATAL: Failed to initialize models: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        raise SystemExit(1)
+
+    print("Starting RunPod serverless handler...", flush=True)
     runpod.serverless.start({"handler": handler})
