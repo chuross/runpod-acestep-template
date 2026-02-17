@@ -23,7 +23,11 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
 # Clone ACE-Step 1.5 repository
-RUN git clone --depth 1 https://github.com/ACE-Step/ACE-Step-1.5.git .
+
+# Clone ACE-Step 1.5 repository into temporary directory and copy to workspace
+RUN git clone --depth 1 https://github.com/ACE-Step/ACE-Step-1.5.git /tmp/acestep && \
+    cp -rf /tmp/acestep/. . && \
+    rm -rf /tmp/acestep
 
 # Install dependencies
 RUN uv sync --no-dev
